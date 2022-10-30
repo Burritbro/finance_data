@@ -1,0 +1,88 @@
+import datetime as dt
+import pandas as pd
+from pandas_datareader import data as pdr
+import statistics
+import random
+import numpy as np
+import scipy.stats as stats
+import metrics
+import matplotlib.pyplot as plt
+
+# Setting the start and end dates
+
+end = dt.date(2021, 12, 31)
+start = end - dt.timedelta(days=364)
+print(start, end)
+
+# setting the stocks that will be used
+
+stock_list = ["KO", "TSLA", "SPY"]
+
+# getting data from pdr via yahoo finance
+df = pdr.get_data_yahoo(stock_list, start, end)
+df_ko = pdr.get_data_yahoo("KO", start, end)
+df_tsla = pdr.get_data_yahoo("TSLA", start, end)
+df_spy = pdr.get_data_yahoo("SPY", start, end)
+# splitting dataframes into categories I don't know exactly what I will need, so I will store all
+
+df_lows = df.Low
+df_highs = df.High
+df_close = df.Close
+df_open = df.Open
+
+print(df_ko.describe())
+
+# putting the daily returns into a list then I can sum them and get the mean
+
+daily_returns_ko = df_ko["Adj Close"].pct_change().tolist()
+daily_returns_tsla = df_tsla["Adj Close"].pct_change().tolist()
+daily_returns_spy = df_spy["Adj Close"].pct_change().tolist()
+# first value has no data so must remove
+daily_returns_ko.pop(0)
+daily_returns_tsla.pop(0)
+daily_returns_spy.pop(0)
+
+# finding daily mean returns
+
+daily_mean_ko = statistics.mean(daily_returns_ko)
+daily_mean_tsla = statistics.mean(daily_returns_tsla)
+daily_mean_spy = statistics.mean(daily_returns_spy)
+print(f"KO daily mean returns: {daily_mean_ko}\nTSLA daily mean returns: {daily_mean_tsla}\nSPY daily mean "
+      f"returns: {daily_mean_spy}")
+
+# using a = .05 we will find the p value that mean_ko == mean_tsla
+
+# first find min and max of each so we can use them to find random data over the course of 1 year, then will compare
+min_tsla = min(daily_returns_tsla)
+max_tsla = max(daily_returns_tsla)
+min_ko = min(daily_returns_ko)
+max_ko = max(daily_returns_ko)
+
+# creating random data
+
+
+
+# show histograms expressing the differing data
+# Clearly we can see the authentic data is uni-modal and normal while the generated data is not
+def ko_hist(random_array, daily_array):
+    plt.style.use("seaborn-dark")
+    bins = np.linspace(-.05, .05)
+    plt.hist([random_array, daily_array], bins, label=['SPY', 'KO'])
+    plt.legend(loc='upper right')
+    plt.show()
+
+def tsla_hist(random_array, daily):
+    plt.style.use("seaborn-dark")
+    bins = np.linspace(-.5, .5)
+    plt.hist([random_array, daily], bins, label=['SPY', 'TSLA'])
+    plt.legend(loc='upper right')
+    plt.show()
+
+
+# call functions to show the histograms
+tsla_hist(daily_returns_spy,daily_returns_tsla)
+
+# standard deviation (sigma)
+std_tsla = statistics.stdev(daily_returns_tsla, daily_mean_tsla)
+std_ko = statistics.stdev(daily_returns_ko, daily_mean_ko)
+print(f"std tsla = {std_tsla}\nstd ko = {std_ko}")
